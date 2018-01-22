@@ -1,0 +1,274 @@
+import javax.swing.*;
+import java.awt.*;
+
+public class WorldPanel extends JPanel
+{
+      private int firstX;
+      private int firstY;
+
+      private int zoom;
+      private int currentPlayer, currentUnit;
+
+      private int mapWidth;
+      private int mapHeight;
+
+      private int[][] myMap;
+
+      private ImageIcon[] myIcons;
+
+      protected Nation player1, player2;
+      protected int iconsToDrawWidth, iconsToDrawHeight;
+
+      public WorldPanel()
+      {
+            this.setBackground(Color.black);
+
+            zoom = 32; 
+
+
+            myIcons = new ImageIcon[55];
+            for(int i = 0; i < myIcons.length; i++)
+            {
+                  myIcons[i] = new ImageIcon("images/Map Pieces/Map" + i + ".png");
+            }
+
+  
+            firstX = 0;
+            firstY = 0;
+      }
+
+    
+      public void paint(Graphics g)
+      {
+            
+            int drawPosX = 0;
+            int drawPosY = 0;
+
+            int arrayPos = 0;
+
+            
+            int width = this.getWidth();
+            int height = this.getHeight();
+
+            int leftOverWidth = this.getWidth() % zoom;
+            int leftOverHeight = this.getHeight() % zoom;
+
+            iconsToDrawWidth = (width - leftOverWidth) / zoom;
+            iconsToDrawHeight = (height - leftOverHeight) / zoom;
+
+            int tempX = firstX;
+            int tempY = firstY;
+            for(int i = 0; i < iconsToDrawHeight; i++)
+            {
+                  if(tempY == mapHeight)
+                        tempY = tempY - mapHeight;
+                  tempX = firstX;
+                  drawPosX = 0;
+                  for(int b = 0; b < iconsToDrawWidth; b++)
+                  {
+                        if(tempX == mapWidth)
+                              tempX = tempX - mapWidth;
+                        arrayPos = tempY * mapWidth + tempX;
+                        int mapPieceToDraw = myMap[0][arrayPos];
+                        Image tempIcon = myIcons[mapPieceToDraw].getImage();
+
+                       
+                        for(int c = 0; c < player1.getCities().length; c++)
+                        {
+                              if(player1.cities[c] != null)
+                              {
+                                    if (arrayPos == player1.cities[c].getLocation())
+                                    {
+                                          tempIcon = player1.cities[c].getImage().getImage();
+                                    }
+                              }
+                        }
+                        for(int c = 0; c < player1.getUnits().length; c++)
+                        {
+                              if(player1.units[c] != null)
+                              {
+                                    if (arrayPos == player1.units[c].getPosition())
+                                    {
+                                          tempIcon = player1.units[c].getImage().getImage();
+                                    }
+                              }
+                        }
+
+                        for(int c = 0; c < player2.getCities().length; c++)
+                        {
+                              if(player2.cities[c] != null)
+                              {
+                                    if(arrayPos == player2.cities[c].getLocation())
+                                    {
+                                          tempIcon = player2.cities[c].getImage().getImage();
+                                    }
+                              }
+                        }
+
+                       
+                        for(int c = 0; c < player2.getUnits().length; c++)
+                        {
+                              if(player2.units[c] != null)
+                              {
+                                    if(arrayPos == player2.units[c].getPosition())
+                                    {
+                                          tempIcon = player2.units[c].getImage().getImage();
+                                    }
+                              }
+                        }
+
+                        g.drawImage(tempIcon, drawPosX, drawPosY, null);
+                        tempX++;
+                        drawPosX = drawPosX + zoom;
+                  }
+                  drawPosY = drawPosY + zoom;
+                  tempY++;
+            }
+				
+				
+				g.setColor(Color.red);
+				g.drawRect(352,223,32,32);
+      }
+
+      public void setInitialMap(int[][] map, int mapW, int mapH)
+      {
+            
+            mapWidth = mapW;
+            mapHeight = mapH;
+            myMap = map;
+
+            
+            player1 = new Nation(1);
+            player1.addUnit(1);
+            player1.addUnit(2);
+            player1.setNumUnits(2);
+            player2 = new Nation(2);
+            player2.addUnit(1);
+            player2.addUnit(2);
+            player2.setNumUnits(2);
+            currentPlayer = 1;
+            currentUnit = 1;
+
+            int totalPieces = mapWidth * mapHeight;
+            boolean b = false;
+            while(b == false)
+            {
+                  int temp = (int)Math.round(Math.random() * totalPieces);
+                  if(myMap[0][temp] == 1)
+                  {
+                        City[] city = player1.getCities();
+                        city[0].setLocation(temp);
+                        b = true;
+                  }
+                  Unit[] unit = player1.getUnits();
+                  unit[0].setPosition(temp - 1);
+                  unit[1].setPosition(temp + 1);
+            }
+
+            b = false;
+            while(b == false)
+            {
+                  int temp = (int)Math.round(Math.random() * totalPieces);
+                  if(myMap[0][temp] == 1)
+                  {
+                        City[] city = player2.getCities();
+                        city[0].setLocation(temp);
+                        b = true;
+                  }
+                  Unit[] unit = player2.getUnits();
+                  unit[0].setPosition(temp - 1);
+                  unit[1].setPosition(temp + 1);
+            }
+
+  
+            int unitPos = player1.units[0].getPosition();
+            int tempX = unitPos % mapWidth;
+            int tempY = unitPos - tempX;
+            if(tempY == 0){}
+            else
+                  tempY = tempY / mapHeight;
+            tempX = tempX - 11;
+            tempY = tempY - 7;
+            if(tempX >=0)
+                  firstX = tempX;
+            else
+                  firstX = tempX + mapWidth;
+            if(tempY >=0)
+                  firstY = tempY;
+            else
+                  firstY = tempY + mapWidth;
+            repaint();
+      }
+
+      public int getFirstX()
+      {
+            return firstX;
+      }
+
+      public int getFirstY()
+      {
+            return firstY;
+      }
+      
+      public void newMapPos(int x, int y)
+      {
+            if(x != 0)
+            {
+                  firstX = firstX + (x / zoom);
+                  if(firstX == -1)
+                        firstX = firstX + mapWidth;
+                  if(firstX == mapWidth)
+                        firstX = firstX - mapWidth;
+            }
+            if(y != 0)
+            {
+                  firstY = firstY + (y / zoom);
+                  if(firstY == -1)
+                        firstY = firstY + mapHeight;
+                  if(firstY == mapHeight)
+                        firstY = firstY - mapHeight;
+            }
+            repaint();
+      }
+
+      public int getCurrentPlayer()
+      {
+            return currentPlayer;
+      }
+
+      public void setCurrentPlayer(int i)
+      {
+            currentPlayer = i;
+      }
+      public int getCurrentUnit()
+      {
+            return currentUnit;
+      }
+      public void setCurrentUnit(int i)
+      {
+            currentUnit = i;
+      }
+
+      public int getNumUnits(int i)
+      {
+            if(i == 1)
+                  return player1.getNumUnits();
+            else
+                  return player2.getNumUnits();
+      }
+      public void setNewXYPos(int x, int y)
+      {
+            firstX = x;
+            firstY = y;
+            repaint();
+      }
+
+      public int getDrawWidth()
+      {
+            return iconsToDrawWidth;
+      }
+      public int getDrawHeight()
+      {
+            return iconsToDrawHeight;
+      }
+}
